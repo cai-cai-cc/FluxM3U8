@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FluxM3U8</string>
+    <string name="app_subtitle">流媒体下载器</string>
+
+    <!-- 通知渠道 -->
+    <string name="channel_name">下载服务</string>
+    <string name="channel_desc">显示当前下载进度，保证后台持续下载</string>
+    <string name="channel_done_name">下载完成</string>
+    <string name="channel_done_desc">任务完成或失败时提醒</string>
+</resources>

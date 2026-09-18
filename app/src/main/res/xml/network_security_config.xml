@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 边下边播依赖 http://127.0.0.1 的本地代理服务。
+         安卓 9+ 默认禁止明文流量，这里显式放行回环地址，
+         保证即使把下面的 base-config 收紧，播放功能也不会被打断。 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">[::1]</domain>
+    </domain-config>
+
+    <!-- 仍有不少 m3u8 源站是 http，默认保持放行。
+         如果你的源站全是 https，把这里改成 false 即可全网禁止明文，
+         回环地址不受影响（上面的 domain-config 优先）。 -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 11（API 30）及以下的备份规则，对应 android:fullBackupContent。
+
+  当前 allowBackup="false"，这些版本本来就不做任何备份，本文件严格来说是冗余的；
+  但配置在这里有两重意义：
+    1. API 26~30 区间内「不做备份」这件事，manifest 与规则文件有一致的表述，
+       而不是只依赖一个可能被后人改掉的开关；
+    2. 万一以后有人把 allowBackup 改回 true，排除规则仍然生效，
+       凭据不会顺带被云端备份走。
+-->
+<full-backup-content>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>

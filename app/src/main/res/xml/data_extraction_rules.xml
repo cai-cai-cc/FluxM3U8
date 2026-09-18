@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12（API 31）起，android:allowBackup 已被降级为「只管云备份」，
+  它不再能阻止「设备间迁移」（换机时系统会把应用数据整包搬过去）。
+  本应用数据库里存有站点的 Cookie / Token（敏感凭据），
+  因此这里对云备份和换机迁移两条通道都显式排除全部数据。
+
+  domain 取值：root / file / database / sharedpref / external / device_* 等，
+  逐个排除比依赖默认值更明确，也避免以后新增域时被意外带上。
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

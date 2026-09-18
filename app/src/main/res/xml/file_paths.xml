@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 应用私有外部目录：把下载好的视频交给系统播放器/相册打开。
+         用 "." 是因为用户可以在设置里自定义内部子目录（如 剧集/第一季），
+         写死 Movies/ 会导致自定义子目录下的文件无法。
+         这里只是声明"哪些路径可以被映射成 content URI"，
+         真正的授权仍然由代码对**单个文件**显式 grant，不等于对整个目录放权；
+         敏感的内部 cache 目录依然不在此列。 -->
+    <external-files-path name="files" path="." />
+</paths>
