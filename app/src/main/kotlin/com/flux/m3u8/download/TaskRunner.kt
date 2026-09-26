@@ -13,6 +13,7 @@ import com.flux.m3u8.merge.Merger
 import com.flux.m3u8.merge.FfmpegConverter
 import com.flux.m3u8.merge.copyWithProgress
 import com.flux.m3u8.model.*
+import com.flux.m3u8.util.Camouflage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import okhttp3.Request
@@ -361,6 +362,18 @@ class TaskRunner(
 
             val out = mergeToOutput(taskRef.get(), segments, initData, tmpDir, control, reportPhase, reportProgress)
 
+            // ── 防相册识别：开启后成品落盘即自动伪装 ──
+            // 只改文件名不改内容，所以放在写盘之后、标记完成之前：
+            // 这样视频从落盘的那一刻起就带 .flux 后缀，压根没机会被相册扫到，
+            // 不必等用户手动点「转换」。改名失败（少数 ROM 的文档提供方不支持 rename）
+            // 不影响下载结果——保持原名，用户仍可事后手动转换。
+            val finalOut = if (settings.camouflage && !Camouflage.isHidden(out.name)) {
+                val hiddenName = Camouflage.hideName(out.name)
+                storage.rename(out.dirUri, out.name, hiddenName)
+                    ?.let { out.copy(uri = it, name = hiddenName) }
+                    ?: out
+            } else out
+
             if (out.dirUri != taskRef.get().saveDirUri) {
                 val moved = taskRef.get().copy(saveDirUri = out.dirUri)
                 taskRef.set(moved)
@@ -370,8 +383,8 @@ class TaskRunner(
             val finished = taskRef.get().copy(
                 status = TaskStatus.Completed,
                 finishedAt = System.currentTimeMillis(),
-                outputUri = out.uri,
-                outputName = out.name,
+                outputUri = finalOut.uri,
+                outputName = finalOut.name,
                 mergeProgress = 1f,
                 phaseLabel = "",
                 error = null,

@@ -509,9 +509,12 @@ object DownloadManager {
     private fun deleteOutputs(task: DownloadTask) {
         val names = linkedSetOf<String>()
         task.outputName?.takeIf { it.isNotBlank() }?.let { names += it }
-        names += "${task.name}.ts"
-        names += "${task.name}.m3u8"
-        names += "${task.name}.mp4"
+        // 任务可能被改过名，outputName 和「任务名 + 扩展名」对不上，
+        // 所以按常见扩展名逐个兜底清（伪装后缀 .flux 也要带上，
+        // 否则伪装过的文件删不掉，任务记录没了、空间还占着）。
+        val base = listOf("${task.name}.ts", "${task.name}.m3u8", "${task.name}.mp4")
+        names += base
+        names += base.map { Camouflage.hideName(it) }
         names.forEach { runCatching { storage.delete(task.saveDirUri, it) } }
     }
 

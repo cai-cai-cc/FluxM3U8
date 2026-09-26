@@ -23,6 +23,7 @@ import com.flux.m3u8.ui.theme.AccentGradient
 import com.flux.m3u8.ui.theme.Danger
 import com.flux.m3u8.ui.theme.Success
 import com.flux.m3u8.ui.theme.Warning
+import com.flux.m3u8.util.Camouflage
 import com.flux.m3u8.util.formatDurationCn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -202,6 +203,8 @@ fun NewTaskDialog(
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 "保存目录已存在同名文件「${conflict.orEmpty()}」，"
+                                        + if (Camouflage.isHidden(conflict))
+                                    "这是防相册识别伪装过的同名文件；" else ""
                                         + "请修改文件名或到设置里更换保存目录后再下载。",
                                 fontSize = 11.sp,
                                 color = Danger,

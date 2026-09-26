@@ -15,7 +15,7 @@ android {
         minSdk = 26          // Android 8.0+：前台服务通知渠道从这一版开始强制
         targetSdk = 34
         versionCode = 1
-        versionName = "1.2.1"
+        versionName = "1.2.2"
 
         // 只打中文资源，减小 APK 体积
         resourceConfigurations += setOf("zh", "en")

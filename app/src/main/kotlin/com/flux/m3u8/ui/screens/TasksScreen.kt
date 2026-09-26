@@ -29,8 +29,10 @@ import com.flux.m3u8.ui.components.SpeedSparkline
 import com.flux.m3u8.ui.components.StatCard
 import com.flux.m3u8.ui.components.TaskCard
 import com.flux.m3u8.ui.theme.Danger
+import com.flux.m3u8.util.Camouflage
 import com.flux.m3u8.util.formatSpeed
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 enum class TaskFilter(val label: String) {
     All("全部"), Active("进行中"), Paused("暂停中"), Done("已完成"), Failed("失败")
@@ -40,11 +42,14 @@ enum class TaskFilter(val label: String) {
 @Composable
 fun TasksScreen(
     tasks: List<DownloadTask>,
+    /** 「防相册识别」开关：打开后已完成任务出现「转换/还原」按钮。 */
+    camouflageEnabled: Boolean = false,
     onOpenSettings: () -> Unit,
     onNewTask: () -> Unit,
     onPlay: (DownloadTask) -> Unit
 ) {
     val context = LocalContext.current
+    val uiScope = rememberCoroutineScope()
     var filter by rememberSaveable { mutableStateOf(TaskFilter.All) }
     var query by rememberSaveable { mutableStateOf("") }
     var searchOpen by remember { mutableStateOf(false) }
@@ -247,6 +252,12 @@ fun TasksScreen(
                         val editable = task.status == TaskStatus.Paused ||
                                 task.status == TaskStatus.Canceled ||
                                 task.status == TaskStatus.Error
+                        // 防相册识别：开关打开时已完成任务都能转换/还原；
+                        // 开关后来关掉也仍要对**已伪装**的文件保留「还原」，
+                        // 否则这些文件就再也变不回可识别的视频了。
+                        val canToggleCamouflage = task.status == TaskStatus.Completed &&
+                                !task.outputName.isNullOrBlank() &&
+                                (camouflageEnabled || Camouflage.isHidden(task.outputName))
                         TaskCard(
                             task = task,
                             canPlay = com.flux.m3u8.playback.PlaybackManager.isPlayable(task),
@@ -258,7 +269,19 @@ fun TasksScreen(
                             // 先弹窗问清楚：只移除任务，还是连本地文件一起删
                             onRemove = { removing = task },
                             onOpen = { openDownloadedFile(context, task) },
-                            onEdit = if (editable) ({ editing = task }) else null
+                            onEdit = if (editable) ({ editing = task }) else null,
+                            onToggleCamouflage = if (canToggleCamouflage) ({
+                                // 重命名为阻塞 IO，交给 IO 线程；结果用 Toast 反馈
+                                val wasHidden = Camouflage.isHidden(task.outputName)
+                                uiScope.launch {
+                                    val error = DownloadManager.toggleCamouflage(task.id)
+                                    Toast.makeText(
+                                        context,
+                                        error ?: if (wasHidden) "已还原文件名" else "已伪装，相册不会再收录",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }) else null
                         )
                     }
                 }
@@ -316,10 +339,15 @@ private fun RemoveTaskDialog(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    if (outputName != null)
-                        "下载好的文件（$outputName）默认保留；选择「同时删除文件」会把它一并删掉，无法恢复。"
-                    else
-                        "该任务还没有产出文件，移除后它的临时分片也会被清理。",
+                    when {
+                        outputName == null ->
+                            "该任务还没有产出文件，移除后它的临时分片也会被清理。"
+                        Camouflage.isHidden(outputName) ->
+                            "下载好的文件（$outputName）默认保留；它的后缀已被防相册识别伪装，" +
+                                    "如需恢复为普通视频请先点「还原」再决定是否删除。"
+                        else ->
+                            "下载好的文件（$outputName）默认保留；选择「同时删除文件」会把它一并删掉，无法恢复。"
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

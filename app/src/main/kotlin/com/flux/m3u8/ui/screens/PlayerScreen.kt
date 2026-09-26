@@ -113,6 +113,7 @@ private fun formatTime(ms: Long): String {
  *  · 双击中间 1/3 → 暂停 / 播放
  *  · 双击右 1/3 → 快进 10 秒
  *  · 长按 → 3x 快速播放；手指松开立即恢复
+ *  · 横向滑动 → 定位到目标位置；**长按 3x 期间又滑动的，松开同样要跳到目标位置并恢复原倍速**
  *
  * 播放位置记忆：按任务 id 存 SharedPreferences，再次打开自动恢复（仅本地播放）。
  */
@@ -500,6 +501,13 @@ fun PlayerScreen(
                                         seekPreviewMs = target
                                         exoPlayer?.seekTo(target)
                                         showSeekPreview = false
+                                        // 长按已经触发 3x 又滑动了：这里会直接 return，
+                                        // 跳过了下面那段恢复倍速的逻辑，不在这里还原就会一直 3x 播下去。
+                                        // 所以先跳到滑动的位置、立刻恢复正常倍速，再决定要不要继续播。
+                                        if (longPressTriggered) {
+                                            exoPlayer?.setPlaybackSpeed(speed)
+                                            showSpeedBoostHint = false
+                                        }
                                         if (wasPlaying) exoPlayer?.play()
                                         return@awaitEachGesture
                                     }

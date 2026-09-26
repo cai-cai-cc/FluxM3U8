@@ -32,6 +32,7 @@ import com.flux.m3u8.download.DownloadManager
 import com.flux.m3u8.model.DownloadTask
 import com.flux.m3u8.playback.PlaybackManager
 import com.flux.m3u8.ui.theme.FluxTheme
+import com.flux.m3u8.util.Camouflage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -56,6 +57,10 @@ fun AppRoot(
     var newTaskName by remember { mutableStateOf("") }
     var themeLight by remember { mutableStateOf(settings.themeLight) }
     var dynamicColor by remember { mutableStateOf(settings.dynamicColor) }
+    // 「防相册识别」开关：设置页改动后立刻回传，任务列表据此显示「转换/还原」按钮。
+    // 存在这里而不是让 TasksScreen 自己读 SharedPreferences：
+    // 后者不是可观察状态，设置页改完回到列表界面不会重组，按钮还是出不来。
+    var camouflageEnabled by remember { mutableStateOf(settings.camouflage) }
 
     // 边下边播：当前正在播放的任务
     var playingTaskId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -118,6 +123,7 @@ fun AppRoot(
             when (screen) {
                 Screen.Tasks -> TasksScreen(
                     tasks = tasks,
+                    camouflageEnabled = camouflageEnabled,
                     onOpenSettings = { screen = Screen.Settings },
                     onNewTask = { newTaskUrl = ""; newTaskName = ""; showNewTask = true },
                     onPlay = { task ->
@@ -133,7 +139,8 @@ fun AppRoot(
                 Screen.Settings -> SettingsScreen(
                     onBack = { screen = Screen.Tasks },
                     onThemeChanged = { themeLight = it },
-                    onDynamicColorChanged = { dynamicColor = it }
+                    onDynamicColorChanged = { dynamicColor = it },
+                    onCamouflageChanged = { camouflageEnabled = it }
                 )
             }
 
@@ -210,8 +217,9 @@ fun openDownloadedFile(context: Context, task: DownloadTask) {
             Uri.parse(raw)
         }
         // 按扩展名给准确的 MIME：单文件产物是 .ts / .mp4（.m3u8 是旧版本产物），
-        // 一律写成 "video/*" 有些播放器会拒绝接收
-        val name = task.outputName.orEmpty().lowercase()
+        // 一律写成 "video/*" 有些播放器会拒绝接收。
+        // 伪装后缀（xxx.mp4.flux）先还原再判定，否则伪装过的文件打不开。
+        val name = Camouflage.restoreName(task.outputName.orEmpty()).lowercase()
         val mime = when {
             name.endsWith(".mp4") -> "video/mp4"
             name.endsWith(".ts") -> "video/mp2t"

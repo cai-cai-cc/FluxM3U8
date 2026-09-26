@@ -6,6 +6,7 @@ import android.os.StatFs
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import com.flux.m3u8.util.Camouflage
 import com.flux.m3u8.util.TempCleaner
 import com.flux.m3u8.util.safeRelativePath
 import java.io.File
@@ -283,7 +284,8 @@ class Storage(private val context: Context) {
         } else {
             listOf("$baseName.ts", "$baseName.mp4", "$baseName.m3u8")
         }
-        return names.firstOrNull { exists(dirUri, it) }
+        val candidates = names + names.map { Camouflage.hideName(it) }
+        return candidates.firstOrNull { exists(dirUri, it) }
     }
 
     /** 删除已写入的文件（任务被移除或合并失败回滚时用）。 */

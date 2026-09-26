@@ -41,7 +41,9 @@ import kotlin.math.roundToInt
 fun SettingsScreen(
     onBack: () -> Unit,
     onThemeChanged: (Boolean) -> Unit,
-    onDynamicColorChanged: (Boolean) -> Unit
+    onDynamicColorChanged: (Boolean) -> Unit,
+    /** 「防相册识别」开关变化：回传给上层，任务列表据此刷新「转换/还原」按钮。 */
+    onCamouflageChanged: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val settings = remember { DownloadManager.settings() }
@@ -87,6 +89,7 @@ fun SettingsScreen(
         settings.timeoutSeconds = timeout.toIntOrNull() ?: 30
         settings.toMp4 = toMp4
         settings.camouflage = camouflage
+        onCamouflageChanged(camouflage)
         settings.keepSegments = keepSegments
         settings.wakeLock = wakeLock
         settings.onlyWifi = onlyWifi
@@ -515,7 +518,8 @@ fun SettingsScreen(
                 SwitchRow(
                     "防相册识别",
                     "给视频文件换上特殊后缀（如 xxx.mp4.flux），系统相册不再收录下载的视频；" +
-                            "开启后已完成的任务下方会出现「转换/还原」按钮，可随时切换，播放器照常播放",
+                            "开启后已完成的任务下方会出现「转换/还原」按钮，可随时切换，播放器照常播放" +
+                            "（关闭后已伪装的文件仍可「还原」）",
                     camouflage
                 ) {
                     camouflage = it; apply()
