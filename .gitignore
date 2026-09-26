@@ -1,23 +1,36 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
-.vscode/
-#Cache folder
-.alcache/
-#Symbols folder
-.alpackages/
-#Snapshots folder
-.snapshots/
-#Testing Output folder
-.output/
-#Extension App-file
-*.app
-#Rapid Application Development File
-rad.json
-#Translation Base-file
-*.g.xlf
-#License-files
-*.bclicense
-*.flf
-#Test results file
-TestResults.xml
+# 构建产物
+*.apk
+*.aab
+*.ap_
+*.dex
+build/
+.gradle/
+app/build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# 签名密钥（绝对不要上传！）
+*.jks
+*.keystore
+keystore.properties
+
+# Gradle Wrapper（必须提交！保证克隆后无需本地装 Gradle 即可构建；
+# .gradle/ 是带点的缓存目录已被忽略，gradle/ 目录不受影响）
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio 捕获 / 分析产物
+captures/
+*.hprof
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
